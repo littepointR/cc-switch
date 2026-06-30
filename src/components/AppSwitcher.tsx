@@ -2,6 +2,7 @@ import type { AppId } from "@/lib/api";
 import type { VisibleApps } from "@/types";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { cn } from "@/lib/utils";
+import { APP_IDS, getAppCapability } from "@/config/appCapabilities";
 import { Monitor, Terminal } from "lucide-react";
 
 const APP_BADGE_ICON: Partial<
@@ -18,15 +19,6 @@ interface AppSwitcherProps {
   compact?: boolean;
 }
 
-const ALL_APPS: AppId[] = [
-  "claude",
-  "claude-desktop",
-  "codex",
-  "gemini",
-  "opencode",
-  "openclaw",
-  "hermes",
-];
 const STORAGE_KEY = "cc-switch-last-app";
 
 export function AppSwitcher({
@@ -41,27 +33,8 @@ export function AppSwitcher({
     onSwitch(app);
   };
   const iconSize = 20;
-  const appIconName: Record<AppId, string> = {
-    claude: "claude",
-    "claude-desktop": "claude",
-    codex: "openai",
-    gemini: "gemini",
-    opencode: "opencode",
-    openclaw: "openclaw",
-    hermes: "hermes",
-  };
-  const appDisplayName: Record<AppId, string> = {
-    claude: "Claude Code",
-    "claude-desktop": "Claude Desktop",
-    codex: "Codex",
-    gemini: "Gemini",
-    opencode: "OpenCode",
-    openclaw: "OpenClaw",
-    hermes: "Hermes",
-  };
-
   // Filter apps based on visibility settings (default all visible)
-  const appsToShow = ALL_APPS.filter((app) => {
+  const appsToShow = APP_IDS.filter((app) => {
     if (!visibleApps) return true;
     return visibleApps[app];
   });
@@ -69,6 +42,7 @@ export function AppSwitcher({
   return (
     <div className="inline-flex bg-muted rounded-xl p-1 gap-1">
       {appsToShow.map((app) => {
+        const capability = getAppCapability(app);
         const badgeConfig = APP_BADGE_ICON[app];
         const BadgeIcon = badgeConfig?.icon;
         const isActive = activeApp === app;
@@ -86,8 +60,8 @@ export function AppSwitcher({
           >
             <span className="relative inline-flex shrink-0">
               <ProviderIcon
-                icon={appIconName[app]}
-                name={appDisplayName[app]}
+                icon={capability.icon}
+                name={capability.displayName}
                 size={iconSize}
               />
               {BadgeIcon && (
@@ -120,7 +94,7 @@ export function AppSwitcher({
                   : "max-w-[120px] opacity-100 ml-2",
               )}
             >
-              {appDisplayName[app]}
+              {capability.displayName}
             </span>
           </button>
         );

@@ -1,5 +1,6 @@
 import React from "react";
 import type { AppId } from "@/lib/api/types";
+import { APP_IDS, MCP_APP_IDS, SKILLS_APP_IDS } from "@/config/appCapabilities";
 import {
   ClaudeIcon,
   CodexIcon,
@@ -14,28 +15,7 @@ export interface AppConfig {
   activeClass: string;
   badgeClass: string;
 }
-
-export const APP_IDS: AppId[] = [
-  "claude",
-  "claude-desktop",
-  "codex",
-  "gemini",
-  "opencode",
-  "openclaw",
-  "hermes",
-];
-
-/** App IDs shown in Skills panels (excludes OpenClaw — it doesn't support Skills) */
-export const SKILLS_APP_IDS: AppId[] = [
-  "claude",
-  "codex",
-  "gemini",
-  "opencode",
-  "hermes",
-];
-
-/** App IDs shown in MCP panels (excludes OpenClaw) */
-export const MCP_APP_IDS: AppId[] = [...SKILLS_APP_IDS];
+export { APP_IDS, MCP_APP_IDS, SKILLS_APP_IDS };
 
 export const APP_ICON_MAP: Record<AppId, AppConfig> = {
   claude: {

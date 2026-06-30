@@ -274,6 +274,19 @@ export interface VisibleApps {
   hermes: boolean;
 }
 
+import type { AppId } from "./lib/api/types";
+
+export interface LaunchProfile {
+  id: string;
+  name: string;
+  appId: AppId;
+  providerId?: string;
+  cwd?: string;
+  terminal?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // WebDAV 同步状态
 export interface WebDavSyncStatus {
   lastSyncAt?: number | null;
@@ -374,6 +387,10 @@ export interface Settings {
 
   // 主页面显示的应用（默认全部显示）
   visibleApps?: VisibleApps;
+
+  // ===== 本机启动配置 =====
+  // 设备本地终端启动快捷方式，不随数据库同步
+  launchProfiles?: LaunchProfile[];
 
   // ===== 设备级目录覆盖 =====
   // 覆盖 Claude Code 配置目录（可选）

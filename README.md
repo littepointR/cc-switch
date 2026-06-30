@@ -263,6 +263,8 @@ Add an official provider from the preset list. After switching to it, run the Lo
 - **Skills**: `~/.cc-switch/skills/` (symlinked to corresponding apps by default)
 - **Skill Backups**: `~/.cc-switch/skill-backups/` (created automatically before uninstall, keeps 20 most recent)
 
+See [Local Security and Privacy](docs/local-security-and-privacy.md) for how Ops Dashboard, Auth Center, local routing, and Launch Profiles handle local-only state.
+
 </details>
 
 ## Documentation

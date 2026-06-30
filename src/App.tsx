@@ -94,8 +94,18 @@ import ToolsPanel from "@/components/openclaw/ToolsPanel";
 import AgentsDefaultsPanel from "@/components/openclaw/AgentsDefaultsPanel";
 import OpenClawHealthBanner from "@/components/openclaw/OpenClawHealthBanner";
 import HermesMemoryPanel from "@/components/hermes/HermesMemoryPanel";
+import {
+  VISIBLE_APP_DEFAULTS,
+  appSupports,
+  getFeatureApp,
+  getFirstVisibleApp,
+  isAdditiveLiveConfigApp,
+  isValidAppId,
+} from "@/config/appCapabilities";
+import { OpsDashboard } from "@/components/dashboard/OpsDashboard";
 
 type View =
+  | "dashboard"
   | "providers"
   | "settings"
   | "prompts"
@@ -121,19 +131,10 @@ const DEFAULT_DRAG_BAR_HEIGHT = isWindows() || isLinux() ? 0 : 28; // px
 const HEADER_HEIGHT = 64; // px
 
 const STORAGE_KEY = "cc-switch-last-app";
-const VALID_APPS: AppId[] = [
-  "claude",
-  "claude-desktop",
-  "codex",
-  "gemini",
-  "opencode",
-  "openclaw",
-  "hermes",
-];
 
 const getInitialApp = (): AppId => {
-  const saved = localStorage.getItem(STORAGE_KEY) as AppId | null;
-  if (saved && VALID_APPS.includes(saved)) {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (isValidAppId(saved)) {
     return saved;
   }
   return "claude";
@@ -141,6 +142,7 @@ const getInitialApp = (): AppId => {
 
 const VIEW_STORAGE_KEY = "cc-switch-last-view";
 const VALID_VIEWS: View[] = [
+  "dashboard",
   "providers",
   "settings",
   "prompts",
@@ -162,7 +164,7 @@ const getInitialView = (): View => {
   if (saved && VALID_VIEWS.includes(saved)) {
     return saved;
   }
-  return "providers";
+  return "dashboard";
 };
 
 function App() {
@@ -170,8 +172,7 @@ function App() {
   const queryClient = useQueryClient();
 
   const [activeApp, setActiveApp] = useState<AppId>(getInitialApp);
-  const sharedFeatureApp: AppId =
-    activeApp === "claude-desktop" ? "claude" : activeApp;
+  const sharedFeatureApp = getFeatureApp(activeApp);
   const [currentView, setCurrentView] = useState<View>(getInitialView);
   const [skillsDiscoverySource, setSkillsDiscoverySource] =
     useState<SkillsPageSource>("repos");
@@ -188,45 +189,38 @@ function App() {
     isLinux() && (settingsData?.useAppWindowControls ?? false);
   const dragBarHeight = useAppWindowControls ? 32 : DEFAULT_DRAG_BAR_HEIGHT;
   const contentTopOffset = dragBarHeight + HEADER_HEIGHT;
-  const visibleApps: VisibleApps = settingsData?.visibleApps ?? {
-    claude: true,
-    "claude-desktop": true,
-    codex: true,
-    gemini: true,
-    opencode: true,
-    openclaw: true,
-    hermes: true,
-  };
-
-  const getFirstVisibleApp = (): AppId => {
-    if (visibleApps.claude) return "claude";
-    if (visibleApps["claude-desktop"]) return "claude-desktop";
-    if (visibleApps.codex) return "codex";
-    if (visibleApps.gemini) return "gemini";
-    if (visibleApps.opencode) return "opencode";
-    if (visibleApps.openclaw) return "openclaw";
-    if (visibleApps.hermes) return "hermes";
-    return "claude"; // fallback
-  };
+  const visibleApps: VisibleApps =
+    settingsData?.visibleApps ?? VISIBLE_APP_DEFAULTS;
 
   useEffect(() => {
     if (!visibleApps[activeApp]) {
-      setActiveApp(getFirstVisibleApp());
+      setActiveApp(getFirstVisibleApp(visibleApps));
     }
   }, [visibleApps, activeApp]);
 
-  // Fallback from sessions view when switching to an app without session support
+  // Fallback from app-scoped views when switching to an unsupported app.
   useEffect(() => {
     if (
       currentView === "sessions" &&
-      sharedFeatureApp !== "claude" &&
-      sharedFeatureApp !== "codex" &&
-      sharedFeatureApp !== "opencode" &&
-      sharedFeatureApp !== "openclaw" &&
-      sharedFeatureApp !== "gemini" &&
-      sharedFeatureApp !== "hermes"
+      !appSupports(sharedFeatureApp, "sessions")
     ) {
       setCurrentView("providers");
+      return;
+    }
+    if (currentView === "skills" && !appSupports(sharedFeatureApp, "skills")) {
+      setCurrentView("providers");
+      return;
+    }
+    if (currentView === "mcp" && !appSupports(sharedFeatureApp, "mcp")) {
+      setCurrentView("providers");
+      return;
+    }
+    if (
+      currentView === "prompts" &&
+      !appSupports(sharedFeatureApp, "prompts")
+    ) {
+      setCurrentView("providers");
+      return;
     }
   }, [sharedFeatureApp, currentView]);
 
@@ -286,14 +280,8 @@ function App() {
       currentView === "openclawAgents");
   const { data: openclawHealthWarnings = [] } =
     useOpenClawHealth(isOpenClawView);
-  const hasSkillsSupport = sharedFeatureApp !== "openclaw";
-  const hasSessionSupport =
-    sharedFeatureApp === "claude" ||
-    sharedFeatureApp === "codex" ||
-    sharedFeatureApp === "opencode" ||
-    sharedFeatureApp === "openclaw" ||
-    sharedFeatureApp === "gemini" ||
-    sharedFeatureApp === "hermes";
+  const hasSkillsSupport = appSupports(sharedFeatureApp, "skills");
+  const hasSessionSupport = appSupports(sharedFeatureApp, "sessions");
 
   const {
     addProvider,
@@ -350,6 +338,9 @@ function App() {
       try {
         const off = await providersApi.onSwitched(
           async (event: ProviderSwitchEvent) => {
+            await queryClient.invalidateQueries({
+              queryKey: ["providers", event.appType],
+            });
             if (event.appType === activeApp) {
               await refetch();
             }
@@ -370,7 +361,7 @@ function App() {
       active = false;
       unsubscribe?.();
     };
-  }, [activeApp, refetch]);
+  }, [activeApp, queryClient, refetch]);
 
   useTauriEvent("universal-provider-synced", async () => {
     await queryClient.invalidateQueries({ queryKey: ["providers"] });
@@ -706,11 +697,7 @@ function App() {
       iconColor: provider.iconColor,
     };
 
-    if (
-      activeApp === "opencode" ||
-      activeApp === "openclaw" ||
-      activeApp === "hermes"
-    ) {
+    if (isAdditiveLiveConfigApp(activeApp)) {
       let liveProviderIds: string[] = [];
       try {
         liveProviderIds =
@@ -884,6 +871,21 @@ function App() {
               defaultTab={settingsDefaultTab}
             />
           );
+        case "dashboard":
+          return (
+            <OpsDashboard
+              activeApp={activeApp}
+              visibleApps={visibleApps}
+              onOpenProviders={(appId) => {
+                setActiveApp(appId);
+                setCurrentView("providers");
+              }}
+              onOpenSettings={(tab) => {
+                setSettingsDefaultTab(tab);
+                setCurrentView("settings");
+              }}
+            />
+          );
         case "prompts":
           return (
             <PromptPanel
@@ -979,9 +981,7 @@ function App() {
                         setConfirmAction({ provider, action: "delete" })
                       }
                       onRemoveFromConfig={
-                        activeApp === "opencode" ||
-                        activeApp === "openclaw" ||
-                        activeApp === "hermes"
+                        isAdditiveLiveConfigApp(activeApp)
                           ? (provider) =>
                               setConfirmAction({ provider, action: "remove" })
                           : undefined
@@ -1133,7 +1133,7 @@ function App() {
             className="flex items-center gap-1"
             style={{ WebkitAppRegion: "no-drag" } as any}
           >
-            {currentView !== "providers" ? (
+            {currentView !== "providers" && currentView !== "dashboard" ? (
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -1207,6 +1207,25 @@ function App() {
                     setCurrentView("settings");
                   }}
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    setCurrentView(
+                      currentView === "dashboard" ? "providers" : "dashboard",
+                    )
+                  }
+                  title={
+                    currentView === "dashboard"
+                      ? t("provider.title", { defaultValue: "Providers" })
+                      : t("dashboard.title", {
+                          defaultValue: "Ops Dashboard",
+                        })
+                  }
+                  className="hover:bg-black/5 dark:hover:bg-white/5"
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                </Button>
                 {isCurrentAppTakeoverActive && (
                   <Button
                     variant="ghost"
@@ -1229,9 +1248,7 @@ function App() {
 
           <div className="flex flex-1 min-w-0 items-center justify-end gap-1.5">
             {currentView === "providers" &&
-              activeApp !== "opencode" &&
-              activeApp !== "openclaw" &&
-              activeApp !== "hermes" && (
+              appSupports(activeApp, "proxyTakeover") && (
                 <div
                   className="flex shrink-0 items-center gap-1.5"
                   style={{ WebkitAppRegion: "no-drag" } as any}
@@ -1243,7 +1260,7 @@ function App() {
                       <ProxyToggle activeApp={activeApp} />
                     )
                   )}
-                  {activeApp !== "claude-desktop" &&
+                  {appSupports(activeApp, "failover") &&
                     settingsData?.enableFailoverToggle && (
                       <FailoverToggle activeApp={activeApp} />
                     )}
@@ -1494,15 +1511,17 @@ function App() {
                               >
                                 <Wrench className="flex-shrink-0 w-4 h-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setCurrentView("prompts")}
-                                className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
-                                title={t("prompts.manage")}
-                              >
-                                <Book className="w-4 h-4" />
-                              </Button>
+                              {appSupports(sharedFeatureApp, "prompts") && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setCurrentView("prompts")}
+                                  className="text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 w-8 px-2"
+                                  title={t("prompts.manage")}
+                                >
+                                  <Book className="w-4 h-4" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="sm"

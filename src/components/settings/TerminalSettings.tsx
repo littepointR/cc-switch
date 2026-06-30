@@ -9,7 +9,7 @@ import {
 import { isMac, isWindows, isLinux } from "@/lib/platform";
 
 // Terminal options per platform
-const MACOS_TERMINALS = [
+export const MACOS_TERMINALS = [
   { value: "terminal", labelKey: "settings.terminal.options.macos.terminal" },
   { value: "iterm2", labelKey: "settings.terminal.options.macos.iterm2" },
   { value: "alacritty", labelKey: "settings.terminal.options.macos.alacritty" },
@@ -20,7 +20,7 @@ const MACOS_TERMINALS = [
   { value: "warp", labelKey: "settings.terminal.options.macos.warp" },
 ] as const;
 
-const WINDOWS_TERMINALS = [
+export const WINDOWS_TERMINALS = [
   { value: "cmd", labelKey: "settings.terminal.options.windows.cmd" },
   {
     value: "powershell",
@@ -29,7 +29,7 @@ const WINDOWS_TERMINALS = [
   { value: "wt", labelKey: "settings.terminal.options.windows.wt" },
 ] as const;
 
-const LINUX_TERMINALS = [
+export const LINUX_TERMINALS = [
   {
     value: "gnome-terminal",
     labelKey: "settings.terminal.options.linux.gnomeTerminal",
@@ -45,7 +45,7 @@ const LINUX_TERMINALS = [
 ] as const;
 
 // Get terminals for the current platform
-function getTerminalOptions() {
+export function getTerminalOptions() {
   if (isMac()) {
     return MACOS_TERMINALS;
   }
@@ -60,7 +60,7 @@ function getTerminalOptions() {
 }
 
 // Get default terminal for the current platform
-function getDefaultTerminal(): string {
+export function getDefaultTerminal(): string {
   if (isMac()) {
     return "terminal";
   }

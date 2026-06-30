@@ -173,6 +173,8 @@ export const handlers = [
     return success(getMcpConfig(app));
   }),
 
+  http.post(`${TAURI_ENDPOINT}/get_installed_skills`, () => success([])),
+
   http.post(`${TAURI_ENDPOINT}/import_mcp_from_claude`, () => success(1)),
   http.post(`${TAURI_ENDPOINT}/import_mcp_from_codex`, () => success(1)),
 
@@ -344,6 +346,9 @@ export const handlers = [
 
   // Failover / circuit breaker defaults
   http.post(`${TAURI_ENDPOINT}/get_failover_queue`, () => success([])),
+  http.post(`${TAURI_ENDPOINT}/get_auto_failover_enabled`, () =>
+    success(false),
+  ),
   http.post(`${TAURI_ENDPOINT}/get_available_providers_for_failover`, () =>
     success([]),
   ),
@@ -380,4 +385,30 @@ export const handlers = [
   ),
   http.post(`${TAURI_ENDPOINT}/reset_circuit_breaker`, () => success(true)),
   http.post(`${TAURI_ENDPOINT}/get_circuit_breaker_stats`, () => success(null)),
+
+  http.post(`${TAURI_ENDPOINT}/get_usage_summary`, () =>
+    success({
+      totalRequests: 0,
+      totalCost: "0",
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      totalCacheCreationTokens: 0,
+      totalCacheReadTokens: 0,
+      successRate: 0,
+      realTotalTokens: 0,
+      cacheHitRate: 0,
+    }),
+  ),
+
+  http.post(`${TAURI_ENDPOINT}/auth_get_status`, async ({ request }) => {
+    const { authProvider } = await withJson<{
+      authProvider: "github_copilot" | "codex_oauth";
+    }>(request);
+    return success({
+      provider: authProvider,
+      authenticated: false,
+      default_account_id: null,
+      accounts: [],
+    });
+  }),
 ];
