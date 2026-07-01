@@ -194,6 +194,7 @@ function App() {
     codex: true,
     gemini: true,
     opencode: true,
+    pi: false,
     openclaw: true,
     hermes: true,
   };
@@ -204,6 +205,7 @@ function App() {
     if (visibleApps.codex) return "codex";
     if (visibleApps.gemini) return "gemini";
     if (visibleApps.opencode) return "opencode";
+    if (visibleApps.pi) return "pi";
     if (visibleApps.openclaw) return "openclaw";
     if (visibleApps.hermes) return "hermes";
     return "claude"; // fallback

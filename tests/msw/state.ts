@@ -70,6 +70,7 @@ const createDefaultProviders = (): ProvidersByApp => ({
     },
   },
   opencode: {},
+  pi: {},
   openclaw: {},
   hermes: {},
 });
@@ -80,6 +81,7 @@ const createDefaultCurrent = (): CurrentProviderState => ({
   codex: "codex-1",
   gemini: "gemini-1",
   opencode: "",
+  pi: "",
   openclaw: "",
   hermes: "",
 });
@@ -161,6 +163,7 @@ let mcpConfigs: McpConfigState = {
         codex: false,
         gemini: false,
         opencode: false,
+        pi: false,
         openclaw: false,
         hermes: false,
       },
@@ -181,6 +184,7 @@ let mcpConfigs: McpConfigState = {
         codex: true,
         gemini: false,
         opencode: false,
+        pi: false,
         openclaw: false,
         hermes: false,
       },
@@ -192,6 +196,7 @@ let mcpConfigs: McpConfigState = {
   },
   gemini: {},
   opencode: {},
+  pi: {},
   openclaw: {},
   hermes: {},
 };
@@ -260,6 +265,7 @@ export const resetProviderState = () => {
     },
     gemini: {},
     opencode: {},
+    pi: {},
     openclaw: {},
     hermes: {},
   };

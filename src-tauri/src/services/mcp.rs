@@ -129,6 +129,10 @@ impl McpService {
                     &server.server,
                 )?;
             }
+            AppType::Pi => {
+                // Pi does not support MCP sync in the first version
+                log::debug!("Pi MCP sync is not supported yet, skipping");
+            }
             AppType::OpenClaw => {
                 // OpenClaw MCP support is still in development (Issue #4834)
                 // Skip for now
@@ -165,6 +169,10 @@ impl McpService {
             AppType::OpenCode => {
                 mcp::remove_server_from_opencode(id)?;
             }
+            AppType::Pi => {
+                // Pi does not support MCP sync in the first version
+                log::debug!("Pi MCP sync is not supported yet, skipping remove");
+            }
             AppType::OpenClaw => {
                 // OpenClaw MCP support is still in development
                 log::debug!("OpenClaw MCP support is still in development, skipping remove");
@@ -181,7 +189,10 @@ impl McpService {
         let servers = Self::get_all_servers(state)?;
 
         for app in AppType::all() {
-            if matches!(app, AppType::OpenClaw | AppType::ClaudeDesktop) {
+            if matches!(
+                app,
+                AppType::Pi | AppType::OpenClaw | AppType::ClaudeDesktop
+            ) {
                 continue;
             }
 

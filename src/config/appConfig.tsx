@@ -21,6 +21,7 @@ export const APP_IDS: AppId[] = [
   "codex",
   "gemini",
   "opencode",
+  "pi",
   "openclaw",
   "hermes",
 ];
@@ -31,11 +32,18 @@ export const SKILLS_APP_IDS: AppId[] = [
   "codex",
   "gemini",
   "opencode",
+  "pi",
   "hermes",
 ];
 
 /** App IDs shown in MCP panels (excludes OpenClaw) */
-export const MCP_APP_IDS: AppId[] = [...SKILLS_APP_IDS];
+export const MCP_APP_IDS: AppId[] = [
+  "claude",
+  "codex",
+  "gemini",
+  "opencode",
+  "hermes",
+];
 
 export const APP_ICON_MAP: Record<AppId, AppConfig> = {
   claude: {
@@ -84,6 +92,14 @@ export const APP_ICON_MAP: Record<AppId, AppConfig> = {
       "bg-indigo-500/10 ring-1 ring-indigo-500/20 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400",
     badgeClass:
       "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/20 border-0 gap-1.5",
+  },
+  pi: {
+    label: "Pi",
+    icon: <ProviderIcon icon="pi" name="Pi" size={14} />,
+    activeClass:
+      "bg-cyan-500/10 ring-1 ring-cyan-500/20 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400",
+    badgeClass:
+      "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20 border-0 gap-1.5",
   },
   openclaw: {
     label: "OpenClaw",

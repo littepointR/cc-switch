@@ -18,6 +18,7 @@ interface DirectorySettingsProps {
   codexDir?: string;
   geminiDir?: string;
   opencodeDir?: string;
+  piDir?: string;
   openclawDir?: string;
   hermesDir?: string;
   onDirectoryChange: (app: DirectoryAppId, value?: string) => void;
@@ -35,6 +36,7 @@ export function DirectorySettings({
   codexDir,
   geminiDir,
   opencodeDir,
+  piDir,
   openclawDir,
   hermesDir,
   onDirectoryChange,
@@ -135,6 +137,17 @@ export function DirectorySettings({
           onChange={(val) => onDirectoryChange("opencode", val)}
           onBrowse={() => onBrowseDirectory("opencode")}
           onReset={() => onResetDirectory("opencode")}
+        />
+
+        <DirectoryInput
+          label={t("settings.piConfigDir")}
+          description={undefined}
+          value={piDir}
+          resolvedValue={resolvedDirs.pi}
+          placeholder={t("settings.browsePlaceholderPi")}
+          onChange={(val) => onDirectoryChange("pi", val)}
+          onBrowse={() => onBrowseDirectory("pi")}
+          onReset={() => onResetDirectory("pi")}
         />
 
         <DirectoryInput

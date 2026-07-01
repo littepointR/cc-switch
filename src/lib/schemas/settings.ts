@@ -24,6 +24,7 @@ export const settingsSchema = z.object({
   codexConfigDir: directorySchema.nullable().optional(),
   geminiConfigDir: directorySchema.nullable().optional(),
   opencodeConfigDir: directorySchema.nullable().optional(),
+  piConfigDir: directorySchema.nullable().optional(),
   openclawConfigDir: directorySchema.nullable().optional(),
 
   // 当前供应商 ID（设备级）
@@ -31,6 +32,10 @@ export const settingsSchema = z.object({
   currentProviderClaudeDesktop: z.string().optional(),
   currentProviderCodex: z.string().optional(),
   currentProviderGemini: z.string().optional(),
+  currentProviderOpencode: z.string().optional(),
+  currentProviderPi: z.string().optional(),
+  currentProviderOpenclaw: z.string().optional(),
+  currentProviderHermes: z.string().optional(),
 
   // Skill 同步设置
   skillSyncMethod: z.enum(["auto", "symlink", "copy"]).optional(),

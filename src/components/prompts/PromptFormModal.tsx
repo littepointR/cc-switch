@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import type React from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,7 @@ const PromptFormModal: React.FC<PromptFormModalProps> = ({
     codex: "AGENTS.md",
     gemini: "GEMINI.md",
     opencode: "AGENTS.md",
+    pi: "AGENTS.md",
     hermes: "AGENTS.md",
   };
   const filename = filenameMap[appId as Exclude<AppId, "openclaw">];
