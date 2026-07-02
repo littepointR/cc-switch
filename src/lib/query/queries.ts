@@ -4,6 +4,7 @@ import {
   type UseQueryResult,
   keepPreviousData,
 } from "@tanstack/react-query";
+import type { UseQueryOptions } from "@tanstack/react-query";
 import {
   providersApi,
   settingsApi,
@@ -52,13 +53,13 @@ export interface UseProvidersQueryOptions {
   isProxyRunning?: boolean; // 代理服务是否运行中
 }
 
-export const useProvidersQuery = (
+export const getProvidersQueryOptions = (
   appId: AppId,
   options?: UseProvidersQueryOptions,
-): UseQueryResult<ProvidersQueryData> => {
+): UseQueryOptions<ProvidersQueryData> => {
   const { isProxyRunning = false } = options || {};
 
-  return useQuery({
+  return {
     queryKey: ["providers", appId],
     placeholderData: keepPreviousData,
     // 当代理服务运行时，每 10 秒刷新一次供应商列表
@@ -85,7 +86,14 @@ export const useProvidersQuery = (
         currentProviderId,
       };
     },
-  });
+  };
+};
+
+export const useProvidersQuery = (
+  appId: AppId,
+  options?: UseProvidersQueryOptions,
+): UseQueryResult<ProvidersQueryData> => {
+  return useQuery(getProvidersQueryOptions(appId, options));
 };
 
 export const useSettingsQuery = (): UseQueryResult<Settings> => {

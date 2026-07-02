@@ -2578,10 +2578,9 @@ fn wsl_distro_from_path(path: &Path) -> Option<String> {
     }
 }
 
-/// 打开指定提供商的终端
+/// 打开指定 Claude Code 提供商的终端
 ///
-/// 根据提供商配置的环境变量启动一个带有该提供商特定设置的终端
-/// 无需检查是否为当前激活的提供商，任何提供商都可以打开终端
+/// 根据提供商配置的环境变量启动一个带有该提供商特定设置的 Claude 终端。
 #[allow(non_snake_case)]
 #[tauri::command]
 pub async fn open_provider_terminal(
@@ -2589,9 +2588,17 @@ pub async fn open_provider_terminal(
     app: String,
     #[allow(non_snake_case)] providerId: String,
     cwd: Option<String>,
+    terminal: Option<String>,
 ) -> Result<bool, String> {
     let app_type = AppType::from_str(&app).map_err(|e| e.to_string())?;
+    if app_type != AppType::Claude {
+        return Err("提供商终端启动目前仅支持 Claude Code".to_string());
+    }
     let launch_cwd = resolve_launch_cwd(cwd)?;
+    let terminal_override = terminal
+        .as_deref()
+        .map(str::trim)
+        .filter(|value| !value.is_empty());
 
     // 获取提供商配置
     let providers = ProviderService::list(state.inner(), app_type.clone())
@@ -2606,8 +2613,13 @@ pub async fn open_provider_terminal(
     let env_vars = extract_env_vars_from_config(config, &app_type);
 
     // 根据平台启动终端，传入提供商ID用于生成唯一的配置文件名
-    launch_terminal_with_env(env_vars, &providerId, launch_cwd.as_deref())
-        .map_err(|e| format!("启动终端失败: {e}"))?;
+    launch_terminal_with_env(
+        env_vars,
+        &providerId,
+        launch_cwd.as_deref(),
+        terminal_override,
+    )
+    .map_err(|e| format!("启动终端失败: {e}"))?;
 
     Ok(true)
 }
@@ -2705,6 +2717,7 @@ fn launch_terminal_with_env(
     env_vars: Vec<(String, String)>,
     provider_id: &str,
     cwd: Option<&Path>,
+    terminal_override: Option<&str>,
 ) -> Result<(), String> {
     let temp_dir = std::env::temp_dir();
     let config_file = temp_dir.join(format!(
@@ -2718,19 +2731,19 @@ fn launch_terminal_with_env(
 
     #[cfg(target_os = "macos")]
     {
-        launch_macos_terminal(&config_file, cwd)?;
+        launch_macos_terminal(&config_file, cwd, terminal_override)?;
         Ok(())
     }
 
     #[cfg(target_os = "linux")]
     {
-        launch_linux_terminal(&config_file, cwd)?;
+        launch_linux_terminal(&config_file, cwd, terminal_override)?;
         Ok(())
     }
 
     #[cfg(target_os = "windows")]
     {
-        launch_windows_terminal(&temp_dir, &config_file, cwd)?;
+        launch_windows_terminal(&temp_dir, &config_file, cwd, terminal_override)?;
         return Ok(());
     }
 
@@ -2760,10 +2773,16 @@ fn write_claude_config(
 
 /// macOS: 根据用户首选终端启动
 #[cfg(target_os = "macos")]
-fn launch_macos_terminal(config_file: &std::path::Path, cwd: Option<&Path>) -> Result<(), String> {
+fn launch_macos_terminal(
+    config_file: &std::path::Path,
+    cwd: Option<&Path>,
+    terminal_override: Option<&str>,
+) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
 
-    let preferred = crate::settings::get_preferred_terminal();
+    let preferred = terminal_override
+        .map(|value| value.to_string())
+        .or_else(crate::settings::get_preferred_terminal);
     let terminal = preferred.as_deref().unwrap_or("terminal");
 
     let shell = get_user_shell();
@@ -3080,11 +3099,17 @@ fn launch_macos_warp(script_file: &std::path::Path) -> Result<(), String> {
 
 /// Linux: 根据用户首选终端启动
 #[cfg(target_os = "linux")]
-fn launch_linux_terminal(config_file: &std::path::Path, cwd: Option<&Path>) -> Result<(), String> {
+fn launch_linux_terminal(
+    config_file: &std::path::Path,
+    cwd: Option<&Path>,
+    terminal_override: Option<&str>,
+) -> Result<(), String> {
     use std::os::unix::fs::PermissionsExt;
     use std::process::Command;
 
-    let preferred = crate::settings::get_preferred_terminal();
+    let preferred = terminal_override
+        .map(|value| value.to_string())
+        .or_else(crate::settings::get_preferred_terminal);
 
     let shell = get_user_shell();
     let exec_line = build_exec_line(&shell, cwd);
@@ -3201,8 +3226,11 @@ fn launch_windows_terminal(
     temp_dir: &std::path::Path,
     config_file: &std::path::Path,
     cwd: Option<&Path>,
+    terminal_override: Option<&str>,
 ) -> Result<(), String> {
-    let preferred = crate::settings::get_preferred_terminal();
+    let preferred = terminal_override
+        .map(|value| value.to_string())
+        .or_else(crate::settings::get_preferred_terminal);
     let terminal = preferred.as_deref().unwrap_or("cmd");
 
     let bat_file = temp_dir.join(format!("cc_switch_claude_{}.bat", std::process::id()));

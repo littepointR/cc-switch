@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io::Write;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::{OnceLock, RwLock};
 
 use crate::app_config::AppType;
@@ -73,6 +73,55 @@ impl VisibleApps {
             AppType::OpenClaw => self.openclaw,
             AppType::Hermes => self.hermes,
         }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct LaunchProfile {
+    pub id: String,
+    pub name: String,
+    pub app_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provider_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cwd: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub terminal: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+impl LaunchProfile {
+    fn normalize(&mut self) {
+        self.name = self.name.trim().to_string();
+        self.app_id = self.app_id.trim().to_string();
+        self.provider_id = self
+            .provider_id
+            .as_ref()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        self.cwd = self
+            .cwd
+            .as_ref()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+        self.terminal = self
+            .terminal
+            .as_ref()
+            .map(|s| s.trim())
+            .filter(|s| !s.is_empty())
+            .map(|s| s.to_string());
+    }
+
+    fn is_valid(&self) -> bool {
+        !self.id.trim().is_empty()
+            && !self.name.trim().is_empty()
+            && matches!(AppType::from_str(self.app_id.trim()), Ok(AppType::Claude))
+            && !self.created_at.trim().is_empty()
+            && !self.updated_at.trim().is_empty()
     }
 }
 
@@ -402,6 +451,10 @@ pub struct AppSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub visible_apps: Option<VisibleApps>,
 
+    // ===== 本机启动配置 =====
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub launch_profiles: Vec<LaunchProfile>,
+
     // ===== 设备级目录覆盖 =====
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub claude_config_dir: Option<String>,
@@ -511,6 +564,7 @@ impl Default for AppSettings {
             common_config_confirmed: None,
             language: None,
             visible_apps: None,
+            launch_profiles: Vec::new(),
             claude_config_dir: None,
             codex_config_dir: None,
             gemini_config_dir: None,
@@ -597,6 +651,11 @@ impl AppSettings {
             .filter(|s| matches!(*s, "en" | "zh" | "zh-TW" | "ja"))
             .map(|s| s.to_string());
 
+        self.launch_profiles
+            .iter_mut()
+            .for_each(LaunchProfile::normalize);
+        self.launch_profiles.retain(LaunchProfile::is_valid);
+
         if let Some(sync) = &mut self.webdav_sync {
             sync.normalize();
             if sync.is_empty() {
@@ -653,6 +712,7 @@ fn save_settings_file(settings: &AppSettings) -> Result<(), AppError> {
     #[cfg(unix)]
     {
         use std::fs::OpenOptions;
+        use std::io::Write;
         use std::os::unix::fs::OpenOptionsExt;
 
         let mut file = OpenOptions::new()
