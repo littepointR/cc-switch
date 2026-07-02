@@ -355,6 +355,7 @@ export function SettingsPage({
                             codexDir={settings.codexConfigDir}
                             geminiDir={settings.geminiConfigDir}
                             opencodeDir={settings.opencodeConfigDir}
+                            piDir={settings.piConfigDir}
                             openclawDir={settings.openclawConfigDir}
                             hermesDir={settings.hermesConfigDir}
                             onDirectoryChange={updateDirectory}

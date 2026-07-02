@@ -174,6 +174,18 @@ impl Provider {
                 str_at(settings.get("baseUrl")),
                 str_at(settings.get("apiKey")),
             ),
+            // Pi (models.json provider fragment) flattens credentials at the top level,
+            // but cc-switch also accepts a wrapper under `provider` / `providerConfig`.
+            AppType::Pi => {
+                let provider_config = settings
+                    .get("provider")
+                    .or_else(|| settings.get("providerConfig"))
+                    .unwrap_or(settings);
+                (
+                    str_at(provider_config.get("baseUrl")),
+                    str_at(provider_config.get("apiKey")),
+                )
+            }
             // OpenCode (OMO) nests credentials under `options` (the SDK options object).
             AppType::OpenCode => {
                 let options = settings.get("options");

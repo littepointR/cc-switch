@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import type { AppId } from "@/lib/api/types";
 import { APP_IDS, MCP_APP_IDS, SKILLS_APP_IDS } from "@/config/appCapabilities";
 import {
@@ -64,6 +64,14 @@ export const APP_ICON_MAP: Record<AppId, AppConfig> = {
       "bg-indigo-500/10 ring-1 ring-indigo-500/20 hover:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400",
     badgeClass:
       "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-500/20 border-0 gap-1.5",
+  },
+  pi: {
+    label: "Pi",
+    icon: <ProviderIcon icon="pi" name="Pi" size={14} />,
+    activeClass:
+      "bg-cyan-500/10 ring-1 ring-cyan-500/20 hover:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400",
+    badgeClass:
+      "bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20 border-0 gap-1.5",
   },
   openclaw: {
     label: "OpenClaw",

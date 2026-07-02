@@ -33,6 +33,7 @@ export function AppSwitcher({
     onSwitch(app);
   };
   const iconSize = 20;
+
   // Filter apps based on visibility settings (default all visible)
   const appsToShow = APP_IDS.filter((app) => {
     if (!visibleApps) return true;

@@ -36,6 +36,7 @@ export const APP_IDS = [
   "codex",
   "gemini",
   "opencode",
+  "pi",
   "openclaw",
   "hermes",
 ] as const satisfies readonly AppId[];
@@ -48,6 +49,7 @@ export const VISIBLE_APP_DEFAULTS: VisibleApps = {
   codex: true,
   gemini: true,
   opencode: true,
+  pi: false,
   openclaw: true,
   hermes: true,
 };
@@ -130,6 +132,22 @@ export const APP_CAPABILITIES = {
       ...switchSupports,
       proxyTakeover: false,
       failover: false,
+      prompts: false,
+    },
+    managedAuth: [],
+  },
+  pi: {
+    id: "pi",
+    label: "Pi",
+    displayName: "Pi",
+    icon: "pi",
+    mode: "additive",
+    featureApp: "pi",
+    supports: {
+      ...switchSupports,
+      proxyTakeover: false,
+      failover: false,
+      mcp: false,
       prompts: false,
     },
     managedAuth: [],

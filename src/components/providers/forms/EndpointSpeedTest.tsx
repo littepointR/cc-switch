@@ -1,4 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Zap, Loader2, Plus, X, AlertCircle, Save } from "lucide-react";
 import type { AppId } from "@/lib/api";
@@ -15,6 +16,7 @@ const ENDPOINT_TIMEOUT_SECS: Record<AppId, number> = {
   "claude-desktop": 8,
   gemini: 8,
   opencode: 8,
+  pi: 8,
   openclaw: 8,
   hermes: 8,
 };

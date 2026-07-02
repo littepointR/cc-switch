@@ -40,6 +40,12 @@ pub(crate) fn provider_exists_in_live_config(
     match app_type {
         AppType::OpenCode => crate::opencode_config::get_providers()
             .map(|providers| providers.contains_key(provider_id)),
+        AppType::Pi => crate::pi_config::read_pi_models_config().map(|config| {
+            config
+                .get("providers")
+                .and_then(Value::as_object)
+                .is_some_and(|providers| providers.contains_key(provider_id))
+        }),
         AppType::OpenClaw => crate::openclaw_config::get_providers()
             .map(|providers| providers.contains_key(provider_id)),
         AppType::Hermes => crate::hermes_config::get_providers()
@@ -347,7 +353,7 @@ fn settings_contain_common_config(app_type: &AppType, settings: &Value, snippet:
             }
             _ => false,
         },
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => false,
+        AppType::OpenCode | AppType::Pi | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => false,
     }
 }
 
@@ -417,7 +423,7 @@ pub(crate) fn remove_common_config_from_settings(
             }
             Ok(result)
         }
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => {
+        AppType::OpenCode | AppType::Pi | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => {
             Ok(settings.clone())
         }
     }
@@ -474,7 +480,7 @@ fn apply_common_config_to_settings(
             }
             Ok(result)
         }
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => {
+        AppType::OpenCode | AppType::Pi | AppType::OpenClaw | AppType::Hermes | AppType::ClaudeDesktop => {
             Ok(settings.clone())
         }
     }
@@ -837,6 +843,10 @@ pub(crate) fn write_live_snapshot(app_type: &AppType, provider: &Provider) -> Re
                 }
             }
         }
+        AppType::Pi => {
+            crate::pi_config::write_pi_provider_live(provider)?;
+            log::info!("Pi provider '{}' written to live config", provider.id);
+        }
         AppType::OpenClaw => {
             // OpenClaw uses additive mode - write provider to config
             use crate::openclaw_config;
@@ -1104,6 +1114,18 @@ pub fn read_live_settings(app_type: AppType) -> Result<Value, AppError> {
             let config = read_opencode_config()?;
             Ok(config)
         }
+        AppType::Pi => {
+            let models_path = crate::pi_config::get_pi_models_path();
+            let settings_path = crate::pi_config::get_pi_settings_path();
+            if !models_path.exists() && !settings_path.exists() {
+                return Err(AppError::localized(
+                    "pi.config.missing",
+                    "Pi 配置文件不存在",
+                    "Pi configuration file not found",
+                ));
+            }
+            crate::pi_config::read_pi_live_settings()
+        }
         AppType::OpenClaw => {
             use crate::openclaw_config::{get_openclaw_config_path, read_openclaw_config};
 
@@ -1225,8 +1247,8 @@ pub fn import_default_config(state: &AppState, app_type: AppType) -> Result<bool
                 "config": config_obj
             })
         }
-        // OpenCode, OpenClaw and Hermes use additive mode and are handled by early return above
-        AppType::OpenCode | AppType::OpenClaw | AppType::Hermes => {
+        // OpenCode, Pi, OpenClaw and Hermes use additive mode and are handled by early return above
+        AppType::OpenCode | AppType::Pi | AppType::OpenClaw | AppType::Hermes => {
             unreachable!("additive mode apps are handled by early return")
         }
     };

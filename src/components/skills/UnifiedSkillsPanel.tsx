@@ -120,6 +120,7 @@ const UnifiedSkillsPanel = React.forwardRef<
       codex: 0,
       gemini: 0,
       opencode: 0,
+      pi: 0,
       openclaw: 0,
       hermes: 0,
     };
@@ -747,6 +748,7 @@ const ImportSkillsDialog: React.FC<ImportSkillsDialogProps> = ({
           codex: skill.foundIn.includes("codex"),
           gemini: skill.foundIn.includes("gemini"),
           opencode: skill.foundIn.includes("opencode"),
+          pi: skill.foundIn.includes("pi"),
           openclaw: false,
           hermes: skill.foundIn.includes("hermes"),
         },

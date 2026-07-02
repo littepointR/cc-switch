@@ -18,6 +18,7 @@ const EXPECTED_APP_IDS: AppId[] = [
   "codex",
   "gemini",
   "opencode",
+  "pi",
   "openclaw",
   "hermes",
 ];
@@ -32,6 +33,7 @@ describe("app capabilities contract", () => {
   it("marks additive apps explicitly", () => {
     expect(APP_IDS.filter(isAdditiveLiveConfigApp)).toEqual([
       "opencode",
+      "pi",
       "openclaw",
       "hermes",
     ]);
@@ -69,9 +71,16 @@ describe("app capabilities contract", () => {
       "codex",
       "gemini",
       "opencode",
+      "pi",
       "hermes",
     ]);
-    expect(MCP_APP_IDS).toEqual(SKILLS_APP_IDS);
+    expect(MCP_APP_IDS).toEqual([
+      "claude",
+      "codex",
+      "gemini",
+      "opencode",
+      "hermes",
+    ]);
   });
 
   it("selects the first visible app with a stable fallback", () => {
@@ -82,6 +91,7 @@ describe("app capabilities contract", () => {
         codex: true,
         gemini: true,
         opencode: true,
+        pi: true,
         openclaw: true,
         hermes: true,
       }),
@@ -93,6 +103,7 @@ describe("app capabilities contract", () => {
         codex: false,
         gemini: false,
         opencode: false,
+        pi: false,
         openclaw: false,
         hermes: false,
       }),

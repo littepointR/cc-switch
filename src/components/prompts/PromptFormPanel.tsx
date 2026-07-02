@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import type React from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ const PromptFormPanel: React.FC<PromptFormPanelProps> = ({
     codex: "AGENTS.md",
     gemini: "GEMINI.md",
     opencode: "AGENTS.md",
+    pi: "AGENTS.md",
     openclaw: "AGENTS.md",
     hermes: "AGENTS.md",
   };

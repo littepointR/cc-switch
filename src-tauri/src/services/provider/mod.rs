@@ -2549,6 +2549,7 @@ impl ProviderService {
             AppType::Codex => Self::extract_codex_common_config(&provider.settings_config),
             AppType::Gemini => Self::extract_gemini_common_config(&provider.settings_config),
             AppType::OpenCode => Self::extract_opencode_common_config(&provider.settings_config),
+            AppType::Pi => Ok(String::new()),
             AppType::OpenClaw => Self::extract_openclaw_common_config(&provider.settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
         }
@@ -2565,6 +2566,7 @@ impl ProviderService {
             AppType::Codex => Self::extract_codex_common_config(settings_config),
             AppType::Gemini => Self::extract_gemini_common_config(settings_config),
             AppType::OpenCode => Self::extract_opencode_common_config(settings_config),
+            AppType::Pi => Ok(String::new()),
             AppType::OpenClaw => Self::extract_openclaw_common_config(settings_config),
             AppType::Hermes => Ok(String::new()), // Hermes doesn't use common config snippets
         }
@@ -2942,6 +2944,9 @@ impl ProviderService {
             AppType::ClaudeDesktop => {
                 crate::claude_desktop_config::validate_provider(provider)?;
             }
+            AppType::Pi => {
+                crate::pi_config::validate_pi_provider_config(&provider.settings_config)?;
+            }
             AppType::Codex => {
                 let settings = provider.settings_config.as_object().ok_or_else(|| {
                     AppError::localized(
@@ -3200,8 +3205,8 @@ impl ProviderService {
 
                 Ok((api_key, base_url))
             }
-            AppType::OpenClaw | AppType::Hermes => {
-                // OpenClaw/Hermes use apiKey and baseUrl directly on the object
+            AppType::OpenClaw | AppType::Hermes | AppType::Pi => {
+                // OpenClaw/Hermes/Pi use apiKey and baseUrl directly on the object
                 let api_key = provider
                     .settings_config
                     .get("apiKey")

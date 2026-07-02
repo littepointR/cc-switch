@@ -51,6 +51,17 @@ export const OPENCODE_KNOWN_OPTION_KEYS = [
   "headers",
 ] as const;
 
+export const PI_DEFAULT_CONFIG = JSON.stringify(
+  {
+    baseUrl: "",
+    apiKey: "",
+    api: "openai-chat",
+    models: [{ id: "" }],
+  },
+  null,
+  2,
+);
+
 export const OPENCLAW_DEFAULT_CONFIG = JSON.stringify(
   {
     baseUrl: "",
