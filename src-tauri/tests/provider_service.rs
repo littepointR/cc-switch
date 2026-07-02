@@ -165,6 +165,7 @@ command = "say"
                 codex: true,
                 gemini: false,
                 opencode: false,
+                pi: false,
                 hermes: false,
             },
             description: None,

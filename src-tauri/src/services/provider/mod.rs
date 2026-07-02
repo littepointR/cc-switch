@@ -1000,8 +1000,15 @@ base_url = "http://localhost:8080"
                 .await
                 .expect("update app proxy config");
         }
+        {
+            let mut config = db.get_proxy_config().await.expect("get proxy config");
+            config.listen_port = 0;
+            db.update_proxy_config(config)
+                .await
+                .expect("update proxy config");
+        }
 
-        state
+        let proxy_info = state
             .proxy_service
             .start()
             .await
@@ -1049,7 +1056,10 @@ base_url = "http://localhost:8080"
         let profile: Value = read_json_file(&profile_path).expect("read desktop profile");
         assert_eq!(
             profile["inferenceGatewayBaseUrl"],
-            json!("http://127.0.0.1:15721/claude-desktop"),
+            json!(format!(
+                "http://127.0.0.1:{}/claude-desktop",
+                proxy_info.port
+            )),
             "desktop profile should stay pointed at the local gateway during takeover"
         );
         assert_eq!(profile["inferenceGatewayAuthScheme"], json!("bearer"));
